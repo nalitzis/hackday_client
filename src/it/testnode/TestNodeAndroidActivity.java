@@ -27,6 +27,8 @@ import android.nfc.tech.NfcF;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -48,9 +50,11 @@ public class TestNodeAndroidActivity extends Activity {
 	
 	private View colorView;
 	
+	private Sensor gyroscope;
 	private Sensor accelerometer;
 	private SensorManager sensorManager;
 	private AccelerometerListener accelerometerlistener;
+	//private GyroscopeListener gyroscopeListener;
 	
 	private SensorSendingRunnable sendingThreadRunnable;
 	
@@ -93,6 +97,9 @@ public class TestNodeAndroidActivity extends Activity {
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         accelerometerlistener = new AccelerometerListener();
         
+        sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        //gyroscopeListener = new GyroscopeListener();
+        
         mAdapter = NfcAdapter.getDefaultAdapter(this);
         pendingIntent = PendingIntent.getActivity(
         	    this, 0, new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
@@ -108,6 +115,22 @@ public class TestNodeAndroidActivity extends Activity {
        techListsArray = new String[][] { new String[] { NfcA.class.getName() } };
     
     }
+    
+    private static final int MENU_CANVAS = 1;
+    
+    public boolean onCreateOptionsMenu (Menu menu){
+    	MenuItem menuItem = menu.add(0, MENU_CANVAS, 0, "canvas");
+    	return true;
+    }
+    
+    public boolean onOptionsItemSelected (MenuItem item){
+    	if(item.getItemId() == MENU_CANVAS){
+    		Intent intent = new Intent(this, MappingActivity.class);
+    		startActivity(intent);
+    	}
+    	return true;
+    }
+    
     
     public void onNewIntent(Intent intent) {
         setIntent(intent);
@@ -152,12 +175,14 @@ public class TestNodeAndroidActivity extends Activity {
     protected void onResume(){
     	super.onResume();
     	sensorManager.registerListener(accelerometerlistener, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+    	//sensorManager.registerListener(gyroscopeListener, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
     	 mAdapter.enableForegroundDispatch(this, pendingIntent, intentFiltersArray, techListsArray);
     }
     
     protected void onPause(){
     	super.onPause();
     	sensorManager.unregisterListener(accelerometerlistener);
+    	//sensorManager.unregisterListener(gyroscopeListener);
     	mAdapter.disableForegroundDispatch(this);
     }
     
@@ -220,6 +245,32 @@ public class TestNodeAndroidActivity extends Activity {
     	
     }
     
+    
+    private class GyroscopeListener implements SensorEventListener{
+
+		@Override
+		public void onAccuracyChanged(Sensor arg0, int arg1) {
+			
+			
+			
+		}
+
+		@Override
+		public void onSensorChanged(SensorEvent event) {
+			final float x = event.values[0];
+			final float y = event.values[1];
+			final float z = event.values[2];
+			xTextViewValue.setText(""+x);
+			yTextViewValue.setText(""+y);
+			zTextViewValue.setText(""+z);
+			if(isConnected && ioSocket != null){
+				sendingThreadRunnable.set(x,y,z);
+				
+			}
+		}
+    	
+    }
+    
     private class AccelerometerListener implements SensorEventListener{
 
 		@Override
@@ -260,6 +311,8 @@ public class TestNodeAndroidActivity extends Activity {
 							
 							Thread t2 = new Thread(){
 								public void run(){
+									//show log info
+									
 									connectbtn.setText(getString(R.string.disconnect));
 									sendbtn.setVisibility(View.VISIBLE);
 									urlEditText.setEnabled(false);
@@ -271,6 +324,9 @@ public class TestNodeAndroidActivity extends Activity {
 									zTextViewValue.setVisibility(View.VISIBLE);
 									colorView.setVisibility(View.VISIBLE);
 									textViewColor.setVisibility(View.VISIBLE);
+									
+									
+									//TODO show real UI
 								}
 							};
 							TestNodeAndroidActivity.this.runOnUiThread(t2);
@@ -302,6 +358,9 @@ public class TestNodeAndroidActivity extends Activity {
 						isConnected = false;
 						Thread t2 = new Thread(){
 							public void run(){
+								
+								//hide debug info
+								
 								connectbtn.setText(getString(R.string.connect));
 								sendbtn.setVisibility(View.INVISIBLE);
 								urlEditText.setEnabled(true);
@@ -313,6 +372,9 @@ public class TestNodeAndroidActivity extends Activity {
 								zTextViewValue.setVisibility(View.INVISIBLE);
 								textViewColor.setVisibility(View.INVISIBLE);
 								colorView.setVisibility(View.INVISIBLE);
+								
+								
+								//TODO hide real UI
 							}
 						};
 						TestNodeAndroidActivity.this.runOnUiThread(t2);

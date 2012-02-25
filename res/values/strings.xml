@@ -2,8 +2,10 @@
 <resources>
 
     <string name="hello">Hello World, TestNodeAndroidActivity!</string>
-    <string name="app_name">TestNodeAndroid</string>
+    <string name="app_name">Just Paint</string>
     <string name="connect">Connect</string>
     <string name="disconnect">Disconnect</string>
-
+	<string name="alert_dialog_ok">Ok</string>
+    <string name="alert_dialog_cancel">Cancel</string>
+        
 </resources>
